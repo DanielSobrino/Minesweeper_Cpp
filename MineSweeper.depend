@@ -1,0 +1,15 @@
+# depslib dependency file v1.0
+1538575524 source:/home/daniel/ownCloud/AutoChallenges/MineSweeper/mineSweeper.cpp
+	<iostream>
+	<vector>
+	<time.h>
+	<SFML/Graphics.hpp>
+	"Sprites/tiles.h"
+
+1538321339 source:/home/daniel/ownCloud/AutoChallenges/MineSweeper/fill.cpp
+	<vector>
+	<SFML/Graphics.hpp>
+	<iostream>
+
+1538575592 /home/daniel/ownCloud/AutoChallenges/MineSweeper/Sprites/tiles.h
+
