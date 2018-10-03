@@ -2,6 +2,7 @@
 #include <vector>
 #include <time.h>
 #include <SFML/Graphics.hpp>
+#include "Sprites/images.h"
 
 using namespace std;
 
@@ -34,7 +35,7 @@ sf::RectangleShape rectTiles;
 void draw(sf::RenderWindow &window);
 void initializeVectors();
 void minesPos(vector<int> &vec, int num, sf::Vector2i pos);
-bool loadSprites(vector<sf::Sprite> &vec, sf::Texture &texture, const string file, int sprite_num);
+bool loadSprites(vector<sf::Sprite> &vec, sf::Texture &texture, const unsigned char *image, uint32_t imgsize, int sprite_num);
 void mouse(sf::Event &event);
 extern void fillTiles(vector<vector<int>> &tiles, vector<vector<int>> &visible_tiles, sf::Vector2u pos);
 
@@ -46,9 +47,9 @@ int main() {
     initializeVectors();
 
     sf::Texture textureFaces, textureNumbers, textureTiles;
-    if (!loadSprites(faces, textureFaces, "Sprites/faces.png", 5)) return EXIT_FAILURE;
-    if (!loadSprites(numbers, textureNumbers, "Sprites/numbers.png", 10)) return EXIT_FAILURE;
-    if (!loadSprites(tiles, textureTiles, "Sprites/tiles.png", 15)) return EXIT_FAILURE;
+    if (!loadSprites(faces, textureFaces, facesimg, sizeof(facesimg), 5)) return EXIT_FAILURE;
+    if (!loadSprites(numbers, textureNumbers, numbersimg, sizeof(numbersimg), 10)) return EXIT_FAILURE;
+    if (!loadSprites(tiles, textureTiles, tilesimg, sizeof(tilesimg), 15)) return EXIT_FAILURE;
 
     sf::RenderWindow window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "MineSweeper2", sf::Style::Close | sf::Style::Titlebar);
     window.setFramerateLimit(60);
@@ -197,10 +198,10 @@ void initializeVectors () {
 
 }
 
-bool loadSprites(vector<sf::Sprite> &vec, sf::Texture &texture, const string file, int sprite_num) {
+bool loadSprites(vector<sf::Sprite> &vec, sf::Texture &texture, const unsigned char *image, uint32_t imgsize, int sprite_num) {
 
-    if (!texture.loadFromFile(file)) {
-        cout << "Can't load file - " << file << endl;
+    if (!texture.loadFromMemory(image, imgsize)) {
+        cout << "Can't load image" << endl;
         return false;
     }
 
