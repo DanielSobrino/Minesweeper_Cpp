@@ -6,19 +6,14 @@
 
 using namespace std;
 
-bool playing = true;
-bool first_click = true;
-
-int mine_num{};
-
-const float SCALE {1.5f};
+const float SCALE {1.f};
 const int WIDTH {20};
 const int HEIGHT {20};
 const float CELL_PIX_SIZE {16.f * SCALE};
 const int CELLS {WIDTH*HEIGHT};
-const float TOP_MARGIN {CELL_PIX_SIZE * 1.5f};
+const float TOP_MARGIN {CELL_PIX_SIZE * 2.2f};
 const float MARGIN {10.f};
-const float WINDOW_WIDTH {WIDTH * CELL_PIX_SIZE + MARGIN * 2};
+const float WINDOW_WIDTH {WIDTH * CELL_PIX_SIZE + MARGIN * 1.7f};
 const float WINDOW_HEIGHT {HEIGHT * CELL_PIX_SIZE + TOP_MARGIN + MARGIN * 2};
 
 vector<sf::Sprite> tiles;
@@ -28,6 +23,12 @@ vector<int> mines(CELLS);
 vector<vector<int>> number_tiles(HEIGHT);
 vector<vector<int>> visible_tiles(HEIGHT);
 
+bool playing = true;
+bool first_click = true;
+
+int mine_num{}, flags_num{};
+float secs{};
+
 enum E_tiles {none, t1, t2, t3, t4, t5, t6, t7, t8, undiscovered, flag, question, pressed_mine, mine, no_mine};
 sf::RenderTexture renderTiles;
 sf::RectangleShape rectTiles;
@@ -35,20 +36,22 @@ sf::RectangleShape rectTiles;
 void draw(sf::RenderWindow &window);
 void initializeVectors();
 void minesPos(vector<int> &vec, int num, sf::Vector2i pos);
-bool loadSprites(vector<sf::Sprite> &vec, sf::Texture &texture, const unsigned char *image, uint32_t imgsize, int sprite_num);
+void number_display(sf::RenderWindow &window, int val, int offset);
+bool loadSprites(vector<sf::Sprite> &vec, sf::Texture &texture, const unsigned char *image, uint32_t imgsize, int sprite_num, float scale = SCALE);
 void mouse(sf::Event &event);
 extern void fillTiles(vector<vector<int>> &tiles, vector<vector<int>> &visible_tiles, sf::Vector2u pos);
 
 int main() {
 
-    mine_num = int(CELLS/5.f); //podrá dividir teniendo en cuenta dificultad
+    mine_num = int(CELLS/3.f); //podrá dividir teniendo en cuenta dificultad
+    flags_num = mine_num;
 
     srand(time(NULL));
     initializeVectors();
 
     sf::Texture textureFaces, textureNumbers, textureTiles;
     if (!loadSprites(faces, textureFaces, facesimg, sizeof(facesimg), 5)) return EXIT_FAILURE;
-    if (!loadSprites(numbers, textureNumbers, numbersimg, sizeof(numbersimg), 10)) return EXIT_FAILURE;
+    if (!loadSprites(numbers, textureNumbers, numbersimg, sizeof(numbersimg), 10, SCALE * 2)) return EXIT_FAILURE;
     if (!loadSprites(tiles, textureTiles, tilesimg, sizeof(tilesimg), 15)) return EXIT_FAILURE;
 
     sf::RenderWindow window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "MineSweeper2", sf::Style::Close | sf::Style::Titlebar);
@@ -63,6 +66,7 @@ int main() {
 
 
     while (playing) {
+
         sf::Event event;
         while (window.pollEvent(event))
         {
@@ -110,6 +114,23 @@ void draw(sf::RenderWindow &window) {
     rectTiles.setTexture(&renderTiles.getTexture());
     window.draw(rectTiles);
 
+    if (!first_click)
+        secs += 1.f/60.f;
+    number_display(window, flags_num, 0);
+    number_display(window, secs, 17);
+
+}
+
+void number_display(sf::RenderWindow &window, int val, int offset) {
+
+    for (int i{2}; i >= 0; --i) {
+        int resto = val % 10;
+        val /= 10;
+        sf::Sprite *sp = &numbers.at(resto);
+        int x_off =  sp->getGlobalBounds().width * offset;
+        sp->setPosition(MARGIN + i * sp->getGlobalBounds().width + x_off, MARGIN);
+        window.draw(numbers.at(resto));
+    }
 }
 
 void mouse (sf::Event &event) {
@@ -131,13 +152,17 @@ void mouse (sf::Event &event) {
         }
     }
 
-    if (sf::Mouse::isButtonPressed(sf::Mouse::Right)) {
+    if (sf::Mouse::isButtonPressed(sf::Mouse::Right) && !first_click) {
         switch(visible_tiles.at(tiley).at(tilex)) {
             case undiscovered:
-                visible_tiles.at(tiley).at(tilex) = flag;
+                if (flags_num > 0) {
+                    visible_tiles.at(tiley).at(tilex) = flag;
+                    flags_num--;
+                }
                 break;
             case flag:
                 visible_tiles.at(tiley).at(tilex) = question;
+                flags_num++;
                 break;
             case question:
                 visible_tiles.at(tiley).at(tilex) = undiscovered;
@@ -198,7 +223,7 @@ void initializeVectors () {
 
 }
 
-bool loadSprites(vector<sf::Sprite> &vec, sf::Texture &texture, const unsigned char *image, uint32_t imgsize, int sprite_num) {
+bool loadSprites(vector<sf::Sprite> &vec, sf::Texture &texture, const unsigned char *image, uint32_t imgsize, int sprite_num, float scale) {
 
     if (!texture.loadFromMemory(image, imgsize)) {
         cout << "Can't load image" << endl;
@@ -209,7 +234,7 @@ bool loadSprites(vector<sf::Sprite> &vec, sf::Texture &texture, const unsigned c
     int width = texture.getSize().x / sprite_num;
     for (int offset{0}; offset < sprite_num; ++offset) {
         sf::Sprite sprite(texture, sf::IntRect(offset * width, 0, width, height));
-        sprite.scale(SCALE, SCALE);
+        sprite.scale(scale, scale);
         vec.push_back(sprite);
     }
     return true;
